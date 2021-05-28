@@ -13,11 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.hazelcast.invocationlistener;
+package com.hazelcast.invocationlistener.impl;
 
-public interface InvocationEvent {
+import com.hazelcast.invocationlistener.InvocationEvent;
+import com.hazelcast.invocationlistener.InvocationListener;
 
-    long getCorrelationId();
+public class InvocationListenerImpl implements InvocationListener {
+    @Override
+    public void invoke(InvocationEvent invocation) {
+    }
 
-    String getOperationName();
+    @Override
+    public void complete(InvocationEvent invocation) {
+    }
+
+    @Override
+    public void completeExceptionally(InvocationEvent invocation, Throwable t) {
+    }
 }

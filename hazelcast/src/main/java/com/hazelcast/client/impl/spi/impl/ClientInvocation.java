@@ -25,6 +25,8 @@ import com.hazelcast.core.HazelcastInstanceNotActiveException;
 import com.hazelcast.core.LifecycleService;
 import com.hazelcast.core.OperationTimeoutException;
 import com.hazelcast.internal.nio.Connection;
+import com.hazelcast.invocationlistener.InvocationListenerService;
+import com.hazelcast.invocationlistener.impl.InvocationEventImpl;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.spi.exception.RetryableException;
 import com.hazelcast.spi.exception.TargetDisconnectedException;
@@ -71,6 +73,7 @@ public class ClientInvocation extends BaseInvocation implements Runnable {
     private final long retryPauseMillis;
     private final Object objectName;
     private final boolean isSmartRoutingEnabled;
+    private final InvocationListenerService invocationListenerService;
     /**
      * We achieve synchronization of different threads via this field
      * sentConnection starts as null.
@@ -111,6 +114,7 @@ public class ClientInvocation extends BaseInvocation implements Runnable {
         this.clientInvocationFuture = new ClientInvocationFuture(this, clientMessage, logger, callIdSequence);
         this.invocationTimeoutMillis = invocationService.getInvocationTimeoutMillis();
         this.isSmartRoutingEnabled = invocationService.isSmartRoutingEnabled();
+        this.invocationListenerService = client.getInvocationListenerService();
     }
 
     /**
@@ -289,12 +293,14 @@ public class ClientInvocation extends BaseInvocation implements Runnable {
     protected void complete(Object response) {
         clientInvocationFuture.complete(response);
         invocationService.deRegisterInvocation(clientMessage.getCorrelationId());
+        invocationListenerService.complete(new InvocationEventImpl(clientMessage));
     }
 
     @Override
     protected void completeExceptionally(Throwable t) {
         clientInvocationFuture.completeExceptionally(t);
         invocationService.deRegisterInvocation(clientMessage.getCorrelationId());
+        invocationListenerService.completeExceptionally(new InvocationEventImpl(clientMessage), t);
     }
 
     protected boolean shouldFailOnIndeterminateOperationState() {

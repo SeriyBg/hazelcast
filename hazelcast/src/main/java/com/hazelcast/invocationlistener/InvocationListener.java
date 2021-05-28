@@ -15,10 +15,8 @@
  */
 package com.hazelcast.invocationlistener;
 
-import com.hazelcast.client.impl.spi.impl.ClientInvocation;
-
 public interface InvocationListener {
-    void invoke(ClientInvocation invocation);
-    void complete(ClientInvocation invocation);
-    void completeExceptionally(ClientInvocation invocation, Throwable t);
+    void invoke(InvocationEvent invocation);
+    void complete(InvocationEvent invocation);
+    void completeExceptionally(InvocationEvent invocation, Throwable t);
 }

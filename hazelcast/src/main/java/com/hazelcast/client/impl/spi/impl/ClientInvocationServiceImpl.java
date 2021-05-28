@@ -27,6 +27,8 @@ import com.hazelcast.client.impl.spi.ClientListenerService;
 import com.hazelcast.client.impl.spi.ClientPartitionService;
 import com.hazelcast.client.impl.spi.EventHandler;
 import com.hazelcast.internal.metrics.Probe;
+import com.hazelcast.invocationlistener.InvocationListener;
+import com.hazelcast.invocationlistener.impl.InvocationEventImpl;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.spi.exception.TargetDisconnectedException;
 import com.hazelcast.spi.impl.executionservice.TaskScheduler;
@@ -243,6 +245,9 @@ public class ClientInvocationServiceImpl implements ClientInvocationService {
         //After this is set, a second thread can notify this invocation
         //Connection could be closed. From this point on, we need to reacquire the permission to notify if needed.
         invocation.setSentConnection(connection);
+
+        client.getInvocationListenerService().invoke(new InvocationEventImpl(invocation.getClientMessage()));
+        
         if (!connection.write(clientMessage)) {
             if (invocation.getPermissionToNotifyForDeadConnection(connection)) {
                 IOException exception = new IOException("Packet not sent to " + connection.getRemoteAddress() + " "

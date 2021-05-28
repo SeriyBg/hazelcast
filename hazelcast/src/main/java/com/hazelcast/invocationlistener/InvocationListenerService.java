@@ -15,9 +15,23 @@
  */
 package com.hazelcast.invocationlistener;
 
+import com.hazelcast.invocationlistener.impl.InvocationEventImpl;
+
 import java.util.List;
 
 public interface InvocationListenerService {
     void registerListener(InvocationListener listener);
     List<InvocationListener> getListeners();
+
+    default void invoke(InvocationEvent invocation) {
+        getListeners().forEach(listener -> listener.invoke(invocation));
+    }
+
+    default void complete(InvocationEvent invocation) {
+        getListeners().forEach(listener -> listener.complete(invocation));
+    }
+
+    default void completeExceptionally(InvocationEvent invocation, Throwable t) {
+        getListeners().forEach(listener -> listener.completeExceptionally(invocation, t));
+    }
 }
