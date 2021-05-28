@@ -31,6 +31,8 @@ import com.hazelcast.crdt.pncounter.PNCounter;
 import com.hazelcast.durableexecutor.DurableExecutorService;
 import com.hazelcast.flakeidgen.FlakeIdGenerator;
 import com.hazelcast.jet.JetService;
+import com.hazelcast.invocationlistener.InvocationListenerService;
+import com.hazelcast.jet.JetInstance;
 import com.hazelcast.logging.LoggingService;
 import com.hazelcast.map.IMap;
 import com.hazelcast.multimap.MultiMap;
@@ -475,6 +477,9 @@ public interface HazelcastInstance {
      */
     @Nonnull
     JetService getJet();
+
+    @Nonnull
+    InvocationListenerService getInvocationListenerService();
 
     /**
      * Shuts down this HazelcastInstance. For more information see {@link com.hazelcast.core.LifecycleService#shutdown()}.

@@ -49,6 +49,9 @@ import com.hazelcast.internal.jmx.ManagementService;
 import com.hazelcast.internal.memory.MemoryStats;
 import com.hazelcast.internal.serialization.InternalSerializationService;
 import com.hazelcast.jet.JetService;
+import com.hazelcast.invocationlistener.InvocationListenerService;
+import com.hazelcast.invocationlistener.impl.InvocationListenerServiceImpl;
+import com.hazelcast.jet.JetInstance;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.logging.LoggingService;
 import com.hazelcast.map.IMap;
@@ -76,6 +79,7 @@ import com.hazelcast.transaction.TransactionManagerService;
 import com.hazelcast.transaction.TransactionOptions;
 import com.hazelcast.transaction.TransactionalTask;
 import com.hazelcast.transaction.impl.xa.XAService;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
@@ -102,6 +106,7 @@ public class HazelcastInstanceImpl implements HazelcastInstance, SerializationSe
     final CPSubsystemImpl cpSubsystem;
     final ManagedContext managedContext;
     final HazelcastInstanceCacheManager hazelcastCacheManager;
+    final InvocationListenerService invocationListenerService = new InvocationListenerServiceImpl();
 
     @SuppressWarnings("checkstyle:executablestatementcount")
     protected HazelcastInstanceImpl(String name, Config config, NodeContext nodeContext) {
@@ -421,6 +426,12 @@ public class HazelcastInstanceImpl implements HazelcastInstance, SerializationSe
     @Override
     public JetService getJet() {
         return node.getNodeExtension().getJet();
+    }
+
+    @NotNull
+    @Override
+    public InvocationListenerService getInvocationListenerService() {
+        return invocationListenerService;
     }
 
     @Override

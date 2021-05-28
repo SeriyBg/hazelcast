@@ -36,6 +36,8 @@ import com.hazelcast.durableexecutor.DurableExecutorService;
 import com.hazelcast.flakeidgen.FlakeIdGenerator;
 import com.hazelcast.internal.util.StringUtil;
 import com.hazelcast.jet.JetService;
+import com.hazelcast.invocationlistener.InvocationListenerService;
+import com.hazelcast.jet.JetInstance;
 import com.hazelcast.logging.LoggingService;
 import com.hazelcast.map.IMap;
 import com.hazelcast.multimap.MultiMap;
@@ -53,6 +55,7 @@ import com.hazelcast.transaction.TransactionContext;
 import com.hazelcast.transaction.TransactionException;
 import com.hazelcast.transaction.TransactionOptions;
 import com.hazelcast.transaction.TransactionalTask;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
@@ -295,6 +298,12 @@ class HazelcastOSGiInstanceImpl
     @Override
     public JetService getJet() {
         return delegatedInstance.getJet();
+    }
+
+    @NotNull
+    @Override
+    public InvocationListenerService getInvocationListenerService() {
+        return delegatedInstance.getInvocationListenerService();
     }
 
     @Override

@@ -243,7 +243,6 @@ public class ClientInvocationServiceImpl implements ClientInvocationService {
         //After this is set, a second thread can notify this invocation
         //Connection could be closed. From this point on, we need to reacquire the permission to notify if needed.
         invocation.setSentConnection(connection);
-
         if (!connection.write(clientMessage)) {
             if (invocation.getPermissionToNotifyForDeadConnection(connection)) {
                 IOException exception = new IOException("Packet not sent to " + connection.getRemoteAddress() + " "

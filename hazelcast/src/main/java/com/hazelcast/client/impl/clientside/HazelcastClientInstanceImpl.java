@@ -68,6 +68,8 @@ import com.hazelcast.core.DistributedObject;
 import com.hazelcast.core.DistributedObjectListener;
 import com.hazelcast.core.HazelcastInstance;
 import com.hazelcast.core.IExecutorService;
+import com.hazelcast.invocationlistener.InvocationListenerService;
+import com.hazelcast.invocationlistener.impl.InvocationListenerServiceImpl;
 import com.hazelcast.core.LifecycleService;
 import com.hazelcast.cp.CPSubsystem;
 import com.hazelcast.cp.event.CPGroupAvailabilityListener;
@@ -134,6 +136,7 @@ import com.hazelcast.transaction.TransactionException;
 import com.hazelcast.transaction.TransactionOptions;
 import com.hazelcast.transaction.TransactionalTask;
 import com.hazelcast.transaction.impl.xa.XAService;
+import org.jetbrains.annotations.NotNull;
 
 import javax.annotation.Nonnull;
 import java.util.Collection;
@@ -204,6 +207,7 @@ public class HazelcastClientInstanceImpl implements HazelcastInstance, Serializa
     private final ConcurrentLinkedQueue<Disposable> onClusterChangeDisposables = new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<Disposable> onClientShutdownDisposables = new ConcurrentLinkedQueue<>();
     private final SqlClientService sqlService;
+    private final InvocationListenerService invocationListenerService = new InvocationListenerServiceImpl();
 
     public HazelcastClientInstanceImpl(String instanceName, ClientConfig clientConfig,
                                        ClientFailoverConfig clientFailoverConfig,
@@ -832,6 +836,12 @@ public class HazelcastClientInstanceImpl implements HazelcastInstance, Serializa
     @Override
     public JetService getJet() {
         return clientExtension.getJet();
+    }
+
+    @NotNull
+    @Override
+    public InvocationListenerService getInvocationListenerService() {
+        return new InvocationListenerServiceImpl();
     }
 
     public void onClusterChange() {
