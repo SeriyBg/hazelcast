@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2008-2020, Hazelcast, Inc. All Rights Reserved.
+ * Copyright (c) 2008-2021, Hazelcast, Inc. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,23 @@
  */
 package com.hazelcast.invocationlistener;
 
+/**
+ * Listener for client invocation operations.
+ */
 public interface InvocationListener {
+
+    /**
+     * Method to be called on the client operation invocation.
+     */
     void invoke(InvocationEvent invocation);
+
+    /**
+     * Method to be called when the invocation call is successfully finished.
+     */
     void complete(InvocationEvent invocation);
+
+    /**
+     * Method to be called when the invocation call is finished with an error.
+     */
     void completeExceptionally(InvocationEvent invocation, Throwable t);
 }

@@ -478,6 +478,11 @@ public interface HazelcastInstance {
     @Nonnull
     JetService getJet();
 
+    /**
+     * Returns a service for registering invocation listeners.
+     * For more information see {@link com.hazelcast.invocationlistener.InvocationListener}.
+     * @return Invocation listener service.
+     */
     @Nonnull
     InvocationListenerService getInvocationListenerService();
 

@@ -40,7 +40,6 @@ import com.hazelcast.instance.impl.TerminatedLifecycleService;
 import com.hazelcast.internal.serialization.InternalSerializationService;
 import com.hazelcast.jet.JetService;
 import com.hazelcast.invocationlistener.InvocationListenerService;
-import com.hazelcast.invocationlistener.impl.InvocationListenerServiceImpl;
 import com.hazelcast.jet.JetInstance;
 import com.hazelcast.logging.LoggingService;
 import com.hazelcast.map.IMap;

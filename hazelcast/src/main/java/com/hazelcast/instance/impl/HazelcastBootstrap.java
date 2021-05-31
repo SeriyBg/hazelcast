@@ -38,6 +38,7 @@ import com.hazelcast.crdt.pncounter.PNCounter;
 import com.hazelcast.durableexecutor.DurableExecutorService;
 import com.hazelcast.flakeidgen.FlakeIdGenerator;
 import com.hazelcast.internal.util.StringUtil;
+import com.hazelcast.invocationlistener.InvocationListenerService;
 import com.hazelcast.jet.JetCacheManager;
 import com.hazelcast.jet.JetService;
 import com.hazelcast.jet.Job;
@@ -538,6 +539,12 @@ public final class HazelcastBootstrap {
         @Override
         public JetService getJet() {
             return jetProxy;
+        }
+
+        @NotNull
+        @Override
+        public InvocationListenerService getInvocationListenerService() {
+            return instance.getInvocationListenerService();
         }
 
         @Override

@@ -841,7 +841,7 @@ public class HazelcastClientInstanceImpl implements HazelcastInstance, Serializa
     @NotNull
     @Override
     public InvocationListenerService getInvocationListenerService() {
-        return new InvocationListenerServiceImpl();
+        return invocationListenerService;
     }
 
     public void onClusterChange() {

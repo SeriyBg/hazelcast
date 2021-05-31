@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.hazelcast.client.impl.spi.impl;
 
 import com.hazelcast.client.HazelcastClientNotActiveException;
@@ -27,7 +26,6 @@ import com.hazelcast.client.impl.spi.ClientListenerService;
 import com.hazelcast.client.impl.spi.ClientPartitionService;
 import com.hazelcast.client.impl.spi.EventHandler;
 import com.hazelcast.internal.metrics.Probe;
-import com.hazelcast.invocationlistener.InvocationListener;
 import com.hazelcast.invocationlistener.impl.InvocationEventImpl;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.spi.exception.TargetDisconnectedException;
@@ -247,7 +245,7 @@ public class ClientInvocationServiceImpl implements ClientInvocationService {
         invocation.setSentConnection(connection);
 
         client.getInvocationListenerService().invoke(new InvocationEventImpl(invocation.getClientMessage()));
-        
+
         if (!connection.write(clientMessage)) {
             if (invocation.getPermissionToNotifyForDeadConnection(connection)) {
                 IOException exception = new IOException("Packet not sent to " + connection.getRemoteAddress() + " "
