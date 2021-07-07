@@ -17,6 +17,8 @@
 package com.hazelcast.spi.impl.operationservice.impl;
 
 import com.hazelcast.cluster.Address;
+import com.hazelcast.invocationlistener.InvocationListenerService;
+import com.hazelcast.invocationlistener.impl.InvocationEventImpl;
 import com.hazelcast.spi.impl.operationservice.InvocationBuilder;
 import com.hazelcast.spi.impl.operationservice.Operation;
 
@@ -26,36 +28,45 @@ import com.hazelcast.spi.impl.operationservice.Operation;
 class InvocationBuilderImpl extends InvocationBuilder {
 
     private final Invocation.Context context;
+    private final InvocationListenerService invocationListenerService;
 
-    InvocationBuilderImpl(Invocation.Context context, String serviceName, Operation op, int partitionId) {
-        this(context, serviceName, op, partitionId, null);
+    InvocationBuilderImpl(Invocation.Context context, String serviceName, Operation op,
+                          int partitionId, InvocationListenerService invocationListenerService) {
+        this(context, serviceName, op, partitionId, null, invocationListenerService);
     }
 
-    InvocationBuilderImpl(Invocation.Context context, String serviceName, Operation op, Address target) {
-        this(context, serviceName, op, Operation.GENERIC_PARTITION_ID, target);
+    InvocationBuilderImpl(Invocation.Context context, String serviceName, Operation op,
+                          Address target, InvocationListenerService invocationListenerService) {
+        this(context, serviceName, op, Operation.GENERIC_PARTITION_ID, target, invocationListenerService);
     }
 
     private InvocationBuilderImpl(Invocation.Context context, String serviceName, Operation op,
-                                  int partitionId, Address target) {
+                                  int partitionId, Address target, InvocationListenerService invocationListenerService) {
         super(serviceName, op, partitionId, target);
         this.context = context;
+        this.invocationListenerService = invocationListenerService;
     }
 
     @Override
     public InvocationFuture invoke() {
-        op.setServiceName(serviceName);
-        Invocation invocation;
-        if (target == null) {
-            op.setPartitionId(partitionId).setReplicaIndex(replicaIndex);
-            invocation = new PartitionInvocation(
-                    context, op, doneCallback, tryCount, tryPauseMillis, callTimeout, resultDeserialized,
-                    failOnIndeterminateOperationState, connectionManager);
-        } else {
-            invocation = new TargetInvocation(
-                    context, op, target, doneCallback, tryCount, tryPauseMillis,
-                    callTimeout, resultDeserialized, connectionManager);
+        try {
+            op.setServiceName(serviceName);
+            InvocationFuture invocationFuture;
+            if (target == null) {
+                op.setPartitionId(partitionId).setReplicaIndex(replicaIndex);
+                invocationFuture = new PartitionInvocation(
+                        context, op, doneCallback, tryCount, tryPauseMillis, callTimeout, resultDeserialized,
+                        failOnIndeterminateOperationState, connectionManager).invoke();
+            } else {
+                invocationFuture = new TargetInvocation(
+                        context, op, target, doneCallback, tryCount, tryPauseMillis,
+                        callTimeout, resultDeserialized, connectionManager).invoke();
+            }
+            invocationListenerService.complete(new InvocationEventImpl(op));
+            return invocationFuture;
+        } catch (Exception e) {
+            invocationListenerService.completeExceptionally(new InvocationEventImpl(op), e);
+            throw e;
         }
-
-        return invocation.invoke();
     }
 }

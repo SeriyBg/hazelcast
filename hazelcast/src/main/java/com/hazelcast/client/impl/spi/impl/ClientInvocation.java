@@ -153,6 +153,18 @@ public class ClientInvocation extends BaseInvocation implements Runnable {
         return clientMessage;
     }
 
+    public String getTarget() {
+        if (isBindToSingleConnection()) {
+            return  "connection " + connection;
+        } else if (partitionId != -1) {
+            return  "partition " + partitionId;
+        } else if (uuid != null) {
+            return  "uuid " + uuid;
+        } else {
+            return  "random";
+        }
+    }
+
     public void disallowRetryOnRandom() {
         this.allowRetryOnRandom = false;
     }
@@ -293,14 +305,14 @@ public class ClientInvocation extends BaseInvocation implements Runnable {
     protected void complete(Object response) {
         clientInvocationFuture.complete(response);
         invocationService.deRegisterInvocation(clientMessage.getCorrelationId());
-        invocationListenerService.complete(new InvocationEventImpl(clientMessage));
+        invocationListenerService.complete(new InvocationEventImpl(this));
     }
 
     @Override
     protected void completeExceptionally(Throwable t) {
         clientInvocationFuture.completeExceptionally(t);
         invocationService.deRegisterInvocation(clientMessage.getCorrelationId());
-        invocationListenerService.completeExceptionally(new InvocationEventImpl(clientMessage), t);
+        invocationListenerService.completeExceptionally(new InvocationEventImpl(this), t);
     }
 
     protected boolean shouldFailOnIndeterminateOperationState() {
@@ -428,20 +440,10 @@ public class ClientInvocation extends BaseInvocation implements Runnable {
 
     @Override
     public String toString() {
-        String target;
-        if (isBindToSingleConnection()) {
-            target = "connection " + connection;
-        } else if (partitionId != -1) {
-            target = "partition " + partitionId;
-        } else if (uuid != null) {
-            target = "uuid " + uuid;
-        } else {
-            target = "random";
-        }
         return "ClientInvocation{"
                 + "clientMessage = " + clientMessage
                 + ", objectName = " + objectName
-                + ", target = " + target
+                + ", target = " + getTarget()
                 + ", sentConnection = " + sentConnection + '}';
     }
 

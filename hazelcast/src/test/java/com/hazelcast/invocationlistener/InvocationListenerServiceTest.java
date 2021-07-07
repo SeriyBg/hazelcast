@@ -26,10 +26,10 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @RunWith(HazelcastParallelClassRunner.class)
@@ -57,8 +57,8 @@ public class InvocationListenerServiceTest {
         client.getInvocationListenerService().registerListener(invocationListener);
         IMap<Object, Object> name = client.getMap("Name");
         name.put("1", "1");
-        verify(invocationListener).invoke(any());
-        verify(invocationListener).complete(any());
+        verify(invocationListener, times(2)).invoke(any());
+        verify(invocationListener, times(2)).complete(any());
     }
 
     @Test

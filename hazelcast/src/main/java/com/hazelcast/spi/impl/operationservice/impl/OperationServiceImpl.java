@@ -33,6 +33,8 @@ import com.hazelcast.internal.serialization.InternalSerializationService;
 import com.hazelcast.internal.util.LatencyDistribution;
 import com.hazelcast.internal.util.counters.Counter;
 import com.hazelcast.internal.util.counters.MwCounter;
+import com.hazelcast.invocationlistener.InvocationListenerService;
+import com.hazelcast.invocationlistener.impl.InvocationEventImpl;
 import com.hazelcast.logging.ILogger;
 import com.hazelcast.spi.impl.NodeEngineImpl;
 import com.hazelcast.spi.impl.PartitionSpecificRunnable;
@@ -145,6 +147,7 @@ public final class OperationServiceImpl implements StaticMetricsProvider, LiveOp
     private final int invocationMaxRetryCount;
     private final long invocationRetryPauseMillis;
     private final boolean failOnIndeterminateOperationState;
+    private final InvocationListenerService invocationListenerService;
 
     @SuppressWarnings("checkstyle:executablestatementcount")
     public OperationServiceImpl(NodeEngineImpl nodeEngine) {
@@ -192,6 +195,7 @@ public final class OperationServiceImpl implements StaticMetricsProvider, LiveOp
         this.slowOperationDetector = new SlowOperationDetector(node.loggingService,
                 operationExecutor.getGenericOperationRunners(), operationExecutor.getPartitionOperationRunners(),
                 properties, hzName);
+        this.invocationListenerService = node.hazelcastInstance.getInvocationListenerService();
     }
 
     public ConcurrentMap<Class, LatencyDistribution> getOpLatencyDistributions() {
@@ -289,7 +293,8 @@ public final class OperationServiceImpl implements StaticMetricsProvider, LiveOp
     @Override
     public InvocationBuilder createInvocationBuilder(String serviceName, Operation op, int partitionId) {
         checkNotNegative(partitionId, "Partition ID cannot be negative!");
-        return new InvocationBuilderImpl(invocationContext, serviceName, op, partitionId)
+        invocationListenerService.invoke(new InvocationEventImpl(op));
+        return new InvocationBuilderImpl(invocationContext, serviceName, op, partitionId, invocationListenerService)
                 .setTryCount(invocationMaxRetryCount)
                 .setTryPauseMillis(invocationRetryPauseMillis)
                 .setFailOnIndeterminateOperationState(failOnIndeterminateOperationState);
@@ -298,7 +303,8 @@ public final class OperationServiceImpl implements StaticMetricsProvider, LiveOp
     @Override
     public InvocationBuilder createInvocationBuilder(String serviceName, Operation op, Address target) {
         checkNotNull(target, "Target cannot be null!");
-        return new InvocationBuilderImpl(invocationContext, serviceName, op, target)
+        invocationListenerService.invoke(new InvocationEventImpl(op));
+        return new InvocationBuilderImpl(invocationContext, serviceName, op, target, invocationListenerService)
                 .setTryCount(invocationMaxRetryCount)
                 .setTryPauseMillis(invocationRetryPauseMillis);
     }
@@ -321,13 +327,21 @@ public final class OperationServiceImpl implements StaticMetricsProvider, LiveOp
     @Override
     @SuppressWarnings("unchecked")
     public <E> InvocationFuture<E> invokeOnPartition(String serviceName, Operation op, int partitionId) {
-        op.setServiceName(serviceName)
-                .setPartitionId(partitionId)
-                .setReplicaIndex(DEFAULT_REPLICA_INDEX);
+        invocationListenerService.invoke(new InvocationEventImpl(op));
+        try {
+            op.setServiceName(serviceName)
+                    .setPartitionId(partitionId)
+                    .setReplicaIndex(DEFAULT_REPLICA_INDEX);
 
-        return new PartitionInvocation(
-                invocationContext, op, invocationMaxRetryCount, invocationRetryPauseMillis,
-                DEFAULT_CALL_TIMEOUT, DEFAULT_DESERIALIZE_RESULT, failOnIndeterminateOperationState).invoke();
+            InvocationFuture invocationFuture = new PartitionInvocation(
+                    invocationContext, op, invocationMaxRetryCount, invocationRetryPauseMillis,
+                    DEFAULT_CALL_TIMEOUT, DEFAULT_DESERIALIZE_RESULT, failOnIndeterminateOperationState).invoke();
+            invocationListenerService.complete(new InvocationEventImpl(op));
+            return invocationFuture;
+        } catch (Exception e) {
+            invocationListenerService.completeExceptionally(new InvocationEventImpl(op), e);
+            throw e;
+        }
     }
 
     @Override
@@ -339,30 +353,54 @@ public final class OperationServiceImpl implements StaticMetricsProvider, LiveOp
     @Override
     public <E> InvocationFuture<E> invokeOnPartitionAsync(String serviceName, Operation op,
                                                           int partitionId, int replicaIndex) {
-        op.setServiceName(serviceName)
-                .setPartitionId(partitionId)
-                .setReplicaIndex(replicaIndex);
+        invocationListenerService.invoke(new InvocationEventImpl(op));
+        try {
+            op.setServiceName(serviceName)
+                    .setPartitionId(partitionId)
+                    .setReplicaIndex(replicaIndex);
 
-        return new PartitionInvocation(
-                invocationContext, op, invocationMaxRetryCount, invocationRetryPauseMillis,
-                DEFAULT_CALL_TIMEOUT, DEFAULT_DESERIALIZE_RESULT, failOnIndeterminateOperationState).invokeAsync();
+            InvocationFuture invocationFuture = new PartitionInvocation(
+                    invocationContext, op, invocationMaxRetryCount, invocationRetryPauseMillis,
+                    DEFAULT_CALL_TIMEOUT, DEFAULT_DESERIALIZE_RESULT, failOnIndeterminateOperationState).invokeAsync();
+            invocationListenerService.complete(new InvocationEventImpl(op));
+            return invocationFuture;
+        } catch (Exception e) {
+            invocationListenerService.completeExceptionally(new InvocationEventImpl(op), e);
+            throw e;
+        }
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public <E> InvocationFuture<E> invokeOnPartition(Operation op) {
-        return new PartitionInvocation(
-                invocationContext, op, invocationMaxRetryCount, invocationRetryPauseMillis,
-                DEFAULT_CALL_TIMEOUT, DEFAULT_DESERIALIZE_RESULT, failOnIndeterminateOperationState).invoke();
+        invocationListenerService.invoke(new InvocationEventImpl(op));
+        try {
+            InvocationFuture invocationFuture = new PartitionInvocation(
+                    invocationContext, op, invocationMaxRetryCount, invocationRetryPauseMillis,
+                    DEFAULT_CALL_TIMEOUT, DEFAULT_DESERIALIZE_RESULT, failOnIndeterminateOperationState).invoke();
+            invocationListenerService.complete(new InvocationEventImpl(op));
+            return invocationFuture;
+        } catch (Exception e) {
+            invocationListenerService.completeExceptionally(new InvocationEventImpl(op), e);
+            throw e;
+        }
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public <E> InvocationFuture<E> invokeOnTarget(String serviceName, Operation op, Address target) {
+        invocationListenerService.invoke(new InvocationEventImpl(op));
         op.setServiceName(serviceName);
 
-        return new TargetInvocation(invocationContext, op, target, invocationMaxRetryCount, invocationRetryPauseMillis,
-                DEFAULT_CALL_TIMEOUT, DEFAULT_DESERIALIZE_RESULT).invoke();
+        try {
+            InvocationFuture invocationFuture = new TargetInvocation(invocationContext, op, target, invocationMaxRetryCount, invocationRetryPauseMillis,
+                    DEFAULT_CALL_TIMEOUT, DEFAULT_DESERIALIZE_RESULT).invoke();
+            invocationListenerService.complete(new InvocationEventImpl(op));
+            return invocationFuture;
+        } catch (Exception e) {
+            invocationListenerService.completeExceptionally(new InvocationEventImpl(op), e);
+            throw e;
+        }
     }
 
     @Override

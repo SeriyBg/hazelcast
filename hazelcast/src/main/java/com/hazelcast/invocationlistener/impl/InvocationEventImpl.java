@@ -16,16 +16,39 @@
 package com.hazelcast.invocationlistener.impl;
 
 import com.hazelcast.client.impl.protocol.ClientMessage;
+import com.hazelcast.client.impl.spi.impl.ClientInvocation;
+import com.hazelcast.internal.nio.Connection;
 import com.hazelcast.invocationlistener.InvocationEvent;
+import com.hazelcast.spi.impl.operationservice.Operation;
+
+import java.util.UUID;
 
 public class InvocationEventImpl implements InvocationEvent {
 
     private final long correlationId;
+    private final UUID invocationId;
     private final String operationName;
+    private final Connection connection;
+    private final String target;
+    private final int partitionId;
 
-    public InvocationEventImpl(ClientMessage clientMessage) {
+    public InvocationEventImpl(ClientInvocation clientInvocation) {
+        ClientMessage clientMessage = clientInvocation.getClientMessage();
         this.correlationId = clientMessage.getCorrelationId();
         this.operationName = clientMessage.getOperationName();
+        this.connection = clientMessage.getConnection();
+        this.target = clientInvocation.getTarget();
+        this.partitionId = clientMessage.getPartitionId();
+        this.invocationId = null;
+    }
+
+    public InvocationEventImpl(Operation operation) {
+        this.correlationId = operation.getCallId();
+        this.operationName = operation.getServiceName();
+        this.connection = operation.getConnection();
+        this.target = operation.getServiceName();
+        this.partitionId = operation.getPartitionId();
+        this.invocationId = null;
     }
 
     @Override
@@ -36,5 +59,25 @@ public class InvocationEventImpl implements InvocationEvent {
     @Override
     public String getOperationName() {
         return operationName;
+    }
+
+    @Override
+    public Connection getConnection() {
+        return connection;
+    }
+
+    @Override
+    public String getTarget() {
+        return target;
+    }
+
+    @Override
+    public int getPartitionId() {
+        return partitionId;
+    }
+
+    @Override
+    public UUID getInvocationId() {
+        return invocationId;
     }
 }

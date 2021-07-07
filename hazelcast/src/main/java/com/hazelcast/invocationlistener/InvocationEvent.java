@@ -15,9 +15,24 @@
  */
 package com.hazelcast.invocationlistener;
 
+import com.hazelcast.internal.nio.Connection;
+
+import javax.annotation.Nullable;
+import java.util.UUID;
+
 public interface InvocationEvent {
 
     long getCorrelationId();
 
     String getOperationName();
+
+    @Nullable
+    Connection getConnection();
+
+    String getTarget();
+
+    int getPartitionId();
+
+    @Nullable
+    UUID getInvocationId();
 }

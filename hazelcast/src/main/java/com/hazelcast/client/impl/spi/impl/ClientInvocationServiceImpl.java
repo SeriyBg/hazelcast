@@ -244,7 +244,7 @@ public class ClientInvocationServiceImpl implements ClientInvocationService {
         //Connection could be closed. From this point on, we need to reacquire the permission to notify if needed.
         invocation.setSentConnection(connection);
 
-        client.getInvocationListenerService().invoke(new InvocationEventImpl(invocation.getClientMessage()));
+        client.getInvocationListenerService().invoke(new InvocationEventImpl(invocation));
 
         if (!connection.write(clientMessage)) {
             if (invocation.getPermissionToNotifyForDeadConnection(connection)) {
