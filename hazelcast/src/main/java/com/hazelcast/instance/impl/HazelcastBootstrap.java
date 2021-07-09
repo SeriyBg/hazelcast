@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.hazelcast.instance.impl;
 
 import com.hazelcast.cardinality.CardinalityEstimator;
@@ -23,6 +22,7 @@ import com.hazelcast.cluster.Endpoint;
 import com.hazelcast.collection.IList;
 import com.hazelcast.collection.IQueue;
 import com.hazelcast.collection.ISet;
+import com.hazelcast.config.AbstractXmlConfigHelper;
 import com.hazelcast.config.Config;
 import com.hazelcast.config.DiscoveryConfig;
 import com.hazelcast.config.JoinConfig;
@@ -541,7 +541,7 @@ public final class HazelcastBootstrap {
             return jetProxy;
         }
 
-        @NotNull
+        @Nonnull
         @Override
         public InvocationListenerService getInvocationListenerService() {
             return instance.getInvocationListenerService();
